@@ -1,6 +1,9 @@
 var express = require('express');
 var mqtt = require('mqtt');
+var ua = require('universal-analytics');
+
 var logs = [];
+var visitor = ua('UA-2072779-32');
 
 // Express page
 var app = express();
@@ -21,5 +24,44 @@ mqttClient.on('connect', function(){
 mqttClient.on('message', function (topic, message) {
     var data = JSON.parse(message);
     logs.push(topic);
-    console.log(topic, data);
+
+    var symbol = data.symbol;
+    var type = symbol.replace('House.', '').substring(0, 1);
+
+    var category = null;
+    var action = null;
+    var label = symbol;
+
+    switch(type) {
+        case 'l':
+            category = 'light';
+            action = data.value === 1 ? 'on' : 'off';
+            break;
+        case 'b':
+            category = 'button';
+            action = data.value === 1 ? 'down' : 'up';
+            break;
+        case 'p':
+            category = 'pump';
+            action = data.value === 1 ? 'on' : 'off';
+            break;
+        case 'o':
+            category = 'outlet';
+            action = data.value === 1 ? 'on' : 'off';
+            break;
+        case 'm':
+            category = 'motor';
+            action = data.value === 1 ? 'on' : 'off';
+            break;
+        case 's':
+            // only send event for movement
+            category = data.value === 1 ? 'sensor' : null;
+            action = 'movement';
+            break;
+    }
+
+    if(category) {
+        console.log('write to analytics', category, action, label);
+        visitor.event(category, action, label).send();
+    }
 });
