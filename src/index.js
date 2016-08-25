@@ -1,4 +1,5 @@
 var express = require('express');
+var mqtt = require('mqtt');
 var logs = [];
 
 // Express page
