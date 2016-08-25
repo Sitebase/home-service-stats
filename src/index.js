@@ -11,3 +11,14 @@ app.get('/', function(request, response) {
 app.listen(app.get('port'), function() {
     console.log("Node app is running at localhost:" + app.get('port'))
 });
+
+////////////////// MQTT listener
+var mqttClient  = mqtt.connect('mqtt://192.168.1.116');
+mqttClient.on('connect', function(){
+    mqttClient.subscribe('home/#');
+});
+mqttClient.on('message', function (topic, message) {
+    var data = JSON.parse(message);
+    logs.push(topic);
+    console.log(topic, data);
+});
